@@ -1,17 +1,17 @@
 CC = gcc
-CFLAGS = -O3 -march=native -std=c99 -pedantic -Wall -Wextra -Wshadow -Wpointer-arith -Wcast-qual -Wstrict-prototypes -Wmissing-prototypes -IFFHT
-VPATH += FFHT
+CFLAGS = -O3 -march=native -std=c99 -pedantic -Wall -Wextra -Wshadow -Wpointer-arith -Wcast-qual -Wstrict-prototypes -Wmissing-prototypes
 
 all: install
 
 TARGET += test_quick test_neon
 TARGET += test_float test_double test_float_header_only test_double_header_only
 
-OBJ := fast_copy.o fht.o
+create-link:
+	ln -sf FFHT/fht_avx.c fht_avx.c
+	ln -sf FFHT/fht_sse.c fht_sse.c
 
-install:
+install: create-link
 	git submodule update --init
-	ln -sf FFHT/fht.c fht.c
 	python setup.py install --user
 
 # %: %.c $(OBJ)
@@ -63,7 +63,7 @@ test: test-init $(TARGET)
 
 clean:
 	rm -f $(OBJ) $(TARGET)
-	rm -f fht.c fht_header_only.h
+	rm -f fht_header_only.h fht_avx.c fht_sse.c
 	rm -rf build/ FFHT.egg-info/ dist/
 
-.PHONY: all test clean install
+.PHONY: all test clean install create-link

@@ -1,5 +1,5 @@
 """
-FFHT Modern Python 3 Compatible Version with Multi-Architecture Support
+FFHT Modern Python 3 Compatible Version with Multi-Architecture Support.
 
 This is a modified version of FFHT (https://github.com/FALCONN-LIB/FFHT)
 with the following improvements:
@@ -44,12 +44,12 @@ except ImportError:
 arr_sources = ['_ffht_3.c', 'fht.c']
 
 module = Extension('ffht',
-                   sources= arr_sources,
+                   sources=arr_sources,
                    extra_compile_args=['-march=native', '-O3', '-Wall', '-Wextra', '-pedantic',
                                        '-Wshadow', '-Wpointer-arith', '-Wcast-qual',
                                        '-Wstrict-prototypes', '-Wmissing-prototypes',
                                        '-std=c99', '-DFHT_HEADER_ONLY'],
-                   include_dirs=[np.get_include(), "FFHT"])
+                   include_dirs=[np.get_include()])
 
 setup(name='FFHT',
       version='1.1',
