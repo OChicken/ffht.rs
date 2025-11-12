@@ -46,6 +46,7 @@ test_float_header_only: FFHT/test_float_header_only.c
 test-init:
 	ln -sf FFHT/fht.c fht.c
 	ln -sf FFHT/fht.h fht.h
+	ln -sf FFHT/fht_header_only.h fht_header_only.h
 	ln -sf FFHT/fast_copy.h fast_copy.h
 	ln -sf FFHT/fht_avx.c fht_avx.c
 	ln -sf FFHT/fht_sse.c fht_sse.c
