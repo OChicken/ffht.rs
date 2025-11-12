@@ -15,12 +15,7 @@
 
 // These functions all assume that the size of memory being copied is a power of 2.
 
-#ifdef USE_MEMCPY_FOR_FAST_COPY
-// Simple memcpy implementation (works for all sizes)
-_STORAGE_ void *fast_copy(void *out, void *in, size_t n) {
-    return memcpy(out, in, n);
-}
-#elif _FEATURE_AVX512F
+#if _FEATURE_AVX512F
 // If n is less than 64, defaults to memcpy. Otherwise, being a power of 2, we can just use unaligned stores and loads.
 _STORAGE_ void *fast_copy(void *out, void *in, size_t n) {
     if(n >= FAST_COPY_MEMCPY_THRESHOLD) {
