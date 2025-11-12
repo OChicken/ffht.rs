@@ -41,7 +41,7 @@ except ImportError:
 
 # Use Python 3 version (fixed for modern Python 3.9+)
 # Original FFHT's _ffht_3.c only worked with Python 3.8 and below
-arr_sources = ['_ffht_3.c', 'FFHT/fht.c']
+arr_sources = ['_ffht_3.c', 'fht.c']
 
 module = Extension('ffht',
                    sources= arr_sources,
