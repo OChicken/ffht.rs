@@ -215,22 +215,27 @@ MIT License (same as original FFHT)
 2. Fast Hadamard Transform: https://en.wikipedia.org/wiki/Fast_Walsh%E2%80%93Hadamard_transform
 3. ARM NEON Intrinsics: https://developer.arm.com/architectures/instruction-sets/intrinsics/
 
-## Documentation Files
+## Documentation
 
-The main documentation is in this `README.md`, which includes:
-- Quick Start guide (build, test, usage examples)
-- Architecture support and improvements
-- Detailed file structure and differences from FFHT
-- Testing instructions
+All documentation is consolidated in this single `README.md`:
 
-Additional documentation files from the development process:
-- `INSTALL_ARM.md`, `README_NEON.md` - ARM-specific guides (obsolete: installation is identical across platforms)
-- `HOW_TO_TEST.md`, `TEST_SUMMARY.md` - Testing documentation (see Testing section above)
-- `NEON_IMPLEMENTATION_SUMMARY.md` - NEON implementation notes
-- `RUST_WRAPPER.md` - Rust wrapper documentation
-- `QUICK_START.md` - Standalone quick start (content merged into this README)
+| Section in README | Content |
+|-------------------|---------|
+| Quick Start | Build, test, and usage examples |
+| Architecture Support | Platform-specific SIMD implementations |
+| Project Structure | File organization and purpose |
+| Diff from FFHT | Detailed comparison with original FFHT |
+| Testing | Comprehensive testing instructions |
+| Detailed Installation | Setup options and dependencies |
 
-These additional files may contain outdated information and can be removed if desired.
+**Previous documentation files** (now removed, content merged above):
+- `QUICK_START.md` → Quick Start section
+- `HOW_TO_TEST.md` + `TEST_SUMMARY.md` → Testing section
+- `INSTALL_ARM.md` + `README_NEON.md` → Quick Start + Architecture Support
+- `NEON_IMPLEMENTATION_SUMMARY.md` → Diff from FFHT (fht_neon.c)
+- `RUST_WRAPPER.md` → Quick Start Rust examples
+
+This single README provides everything you need to use, build, test, and understand ffht.rs.
 
 ## Contributing
 
