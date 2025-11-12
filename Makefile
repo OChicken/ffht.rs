@@ -1,5 +1,6 @@
 CC = gcc
-CFLAGS = -O3 -march=native -std=c99 -pedantic -Wall -Wextra -Wshadow -Wpointer-arith -Wcast-qual -Wstrict-prototypes -Wmissing-prototypes
+CFLAGS = -O3 -march=native -std=c99 -pedantic -Wall -Wextra -Wshadow -Wpointer-arith -Wcast-qual -Wstrict-prototypes -Wmissing-prototypes -IFFHT
+VPATH += FFHT
 
 all: install
 
@@ -45,15 +46,7 @@ test_float_header_only: FFHT/test_float_header_only.c
 
 test-init:
 	ln -sf FFHT/fht.c fht.c
-	ln -sf FFHT/fht.h fht.h
 	ln -sf FFHT/fht_header_only.h fht_header_only.h
-	ln -sf FFHT/fast_copy.h fast_copy.h
-	ln -sf FFHT/fht_avx.c fht_avx.c
-	ln -sf FFHT/fht_sse.c fht_sse.c
-	ln -sf FFHT/test_float.c test_float.c
-	ln -sf FFHT/test_float_header_only.c test_float_header_only.c
-	ln -sf FFHT/test_double.c test_double.c
-	ln -sf FFHT/test_double_header_only.c test_double_header_only.c
 	$(CC) -c fast_copy.c -o fast_copy.o $(CFLAGS) -lm
 	$(CC) -c fht.c       -o fht.o       $(CFLAGS) -lm
 
@@ -70,7 +63,7 @@ test: test-init $(TARGET)
 
 clean:
 	rm -f $(OBJ) $(TARGET)
-	rm -f fht.c fht.h 
+	rm -f fht.c fht_header_only.h
 	rm -rf build/ FFHT.egg-info/ dist/
 
 .PHONY: all test clean install
