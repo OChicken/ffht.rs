@@ -1,17 +1,24 @@
 # FFHT Rust Wrapper - Test Summary
 
-## Quick Answer: How to Regenerate Test Binaries
+## Quick Answer: How to Build and Run C Tests
 
-The test binaries you saw (`test_defines`, `test_inplace`, `test_oop`, etc.) were debugging tools created during wrapper development. Here's how to recreate them:
+The C test binaries provide comprehensive testing of the FFHT library. Here's how to build and run them:
 
 ```bash
-# Rebuild the 3 debug test binaries
-./rebuild_debug_tests.sh
+# Build all C test binaries
+make test
 
 # This creates:
-#   - test_defines  (checks SIMD compiler macros)
-#   - test_inplace  (tests in-place FHT)
-#   - test_oop      (tests out-of-place FHT)
+#   - test_quick    (comprehensive: defines, fast_copy, in-place, OOP)
+#   - test_neon     (NEON-specific correctness and benchmarks)
+#   - test_float    (FFHT float test, log_n 1-30)
+#   - test_double   (FFHT double test, log_n 1-30)
+
+# Run them:
+./test_quick
+./test_neon
+./test_float
+./test_double
 ```
 
 ## Test Categories

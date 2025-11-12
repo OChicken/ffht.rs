@@ -4,6 +4,69 @@ Rust wrapper for FFHT (Fast Fast Hadamard Transform) with Python 3 and ARM NEON 
 
 This project wraps the original [FFHT library](https://github.com/FALCONN-LIB/FFHT) by Ilya Razenshteyn and Ludwig Schmidt, adding several improvements to make it more accessible and performant across different platforms.
 
+## Quick Start
+
+Get up and running in 2 minutes.
+
+### Build
+```bash
+# Python wrapper
+make                    # Installs Python package (essentially 'make install')
+
+# Rust wrapper
+cargo build             # Builds Rust library
+```
+
+After `make`, you can use `import ffht` in Python. After `cargo build`, you can use the Rust library in your project.
+
+### Test
+Verify everything works on your machine:
+```bash
+# C tests
+make test               # Build all C tests
+./test_quick            # Run quick test
+
+# Python test
+python test_quick.py    # Python wrapper test
+
+# Rust tests
+cargo test              # Run all Rust tests
+```
+
+If these pass, the library is working correctly on your platform!
+
+### Usage Examples
+
+**Python:**
+```python
+import ffht
+import numpy as np
+
+x = np.random.randn(256)  # Size must be power of 2
+ffht.fht(x)               # In-place transform
+print(x)                  # Transformed data
+```
+
+**Rust:**
+```rust
+use ffht::FhtArray;
+use ndarray::Array1;
+
+let mut data = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0]);
+data.fht_inplace().expect("FHT failed");
+println!("{:?}", data);  // Transformed data
+```
+
+**Note**: Build and test commands are **identical** on x86_64 and aarch64 (ARM). The library automatically detects your architecture and uses the appropriate SIMD instructions (AVX2/SSE2 for x86, NEON for ARM).
+
+### Next Steps
+- 📖 **Learn more**: See [Improvements Over Original FFHT](#improvements-over-original-ffht) and [Architecture Support](#architecture-support)
+- 📁 **Understand the code**: Check [Project Structure](#project-structure) and [Diff from FFHT](#diff-from-ffht)
+- 🧪 **Advanced testing**: See [Testing](#testing) for comprehensive test suites
+- 🔧 **Integration**: Read [Detailed Installation](#detailed-installation) for custom setups
+
+---
+
 ## Improvements Over Original FFHT
 
 ### 1. **Modern Python 3 Compatibility (3.9+)** ✅
@@ -38,70 +101,48 @@ Provides safe Rust bindings for use in Rust projects through FFI.
 ```
 ffht.rs/
 ├── FFHT/                    # Original FFHT as git submodule
-│   ├── fht.c               # Core C implementation
-│   ├── fht_sse.c           # SSE optimized version
-│   ├── fht_avx.c           # AVX optimized version
+│   ├── fht.h               # Original header
+│   ├── fht.c               # Original core implementation
+│   ├── fht_sse.c           # Original SSE optimized version
+│   ├── fht_avx.c           # Original AVX optimized version
+│   ├── fast_copy.{c,h}     # Original fast copy utilities
 │   └── ...
-├── _ffht_3.c               # Fixed Python 3 binding
+├── fht.h                   # Our modified header (with inline fast_copy)
+├── fht.c                   # Our simplified wrapper (includes SIMD implementations)
 ├── fht_neon.c              # ARM NEON implementation (NEW)
-├── fast_copy.c             # Helper functions
+├── _ffht_3.c               # Fixed Python 3.9+ binding
+├── test_quick.c            # Quick test suite
+├── test_neon.c             # NEON-specific tests
 ├── Cargo.toml              # Rust package manifest
-├── build.rs                # Rust build script
+├── build.rs                # Rust build script (compiles C code)
 ├── src/
 │   └── lib.rs              # Rust FFI bindings
-└── setup.py                # Python package setup (modified)
+├── setup.py                # Python package setup (modified for Python 3.9+)
+└── Makefile                # Build system for C tests
 ```
 
-## Installation
+## Detailed Installation
+
+For more control over the installation process:
 
 ### Python Package
-
 ```bash
-python3 setup.py install
+# Initialize git submodule first (if cloning from git)
+git submodule update --init
+
+# Install Python package
+python3 setup.py install --user
+# Or simply: make
 ```
 
 ### Rust Dependency
-
 Add to your `Cargo.toml`:
-
 ```toml
 [dependencies]
 ffht = { path = "path/to/ffht.rs" }
 ```
 
-## Usage
-
-### Python
-
-```python
-import ffht
-import numpy as np
-
-# Create array (size must be power of 2)
-x = np.random.randn(256)
-
-# In-place transform
-ffht.fht(x)
-
-# The array x now contains the Hadamard transform
-```
-
-### Rust
-
-```rust
-use ffht::FhtArray;
-use ndarray::Array1;
-
-fn main() {
-    // Create array (size must be power of 2)
-    let mut data = Array1::<f64>::from_vec(vec![1.0, 2.0, 3.0, 4.0]);
-
-    // In-place transform
-    data.fht_inplace().expect("FHT failed");
-
-    // data now contains the Hadamard transform
-}
-```
+The installation process is identical on x86_64 and aarch64 (ARM) platforms.
 
 ## Architecture Support
 
@@ -124,14 +165,30 @@ The Fast Hadamard Transform (FHT) runs in O(n log n) time, where n is the input 
 
 ## Testing
 
+### C Tests (Makefile)
+```bash
+# Build and compile all tests
+make test
+
+# Run individual tests
+./test_quick        # Quick comprehensive test
+./test_neon         # NEON-specific test (runs on both x86 and ARM)
+./test_float        # Float FHT test from original FFHT
+./test_double       # Double FHT test from original FFHT
+```
+
 ### Python Tests
 ```bash
-python3 -m pytest tests/
+python3 test_quick.py
 ```
 
 ### Rust Tests
 ```bash
+# Run standard tests
 cargo test
+
+# Run all tests including comprehensive size tests
+cargo test --release -- --include-ignored
 ```
 
 ## Integration with bp.rs
@@ -158,6 +215,23 @@ MIT License (same as original FFHT)
 2. Fast Hadamard Transform: https://en.wikipedia.org/wiki/Fast_Walsh%E2%80%93Hadamard_transform
 3. ARM NEON Intrinsics: https://developer.arm.com/architectures/instruction-sets/intrinsics/
 
+## Documentation Files
+
+The main documentation is in this `README.md`, which includes:
+- Quick Start guide (build, test, usage examples)
+- Architecture support and improvements
+- Detailed file structure and differences from FFHT
+- Testing instructions
+
+Additional documentation files from the development process:
+- `INSTALL_ARM.md`, `README_NEON.md` - ARM-specific guides (obsolete: installation is identical across platforms)
+- `HOW_TO_TEST.md`, `TEST_SUMMARY.md` - Testing documentation (see Testing section above)
+- `NEON_IMPLEMENTATION_SUMMARY.md` - NEON implementation notes
+- `RUST_WRAPPER.md` - Rust wrapper documentation
+- `QUICK_START.md` - Standalone quick start (content merged into this README)
+
+These additional files may contain outdated information and can be removed if desired.
+
 ## Contributing
 
 Contributions are welcome! Please ensure:
@@ -169,11 +243,96 @@ Contributions are welcome! Please ensure:
 
 # Diff from FFHT
 
-This section documents the files that differ from the original FFHT submodule (`ffht.rs/FFHT/`), explaining what was changed and why.
+This section documents how `ffht.rs` differs from the original FFHT submodule (`ffht.rs/FFHT/`), explaining what was changed and why.
+
+## Design Philosophy
+
+Instead of maintaining separate `fht_impl.h`, `fht_header_only.h`, and `fast_copy.{c,h}` files, we **merged** and **simplified** the structure:
+
+- **`fht.h`** ≈ `FFHT/fast_copy.{c,h}`: Contains `fast_copy()` as a `static inline` function with all SIMD variants (AVX2, SSE2, NEON)
+- **`fht.c`** ≈ `FFHT/fht_impl.h`: Simplified wrapper that includes the appropriate SIMD implementation (`fht_avx.c`, `fht_sse.c`, or `fht_neon.c`) and defines out-of-place functions
+- **No separate files**: Removed the need for `fht_impl.h`, `fht_header_only.h`, `fast_copy.c`, and `fast_copy.h`
+
+**Key mappings**:
+```
+FFHT/fast_copy.c + FFHT/fast_copy.h  →  fht.h (merged as inline functions)
+FFHT/fht_impl.h                      →  fht.c (implementation selection logic)
+```
+
+This design provides a **header-only** experience for `fast_copy` while keeping SIMD implementations modular.
 
 ## Modified Files
 
-### 1. `_ffht_3.c` - Python 3.9+ Compatibility Fix
+### 1. `fht.h` - Unified Header with Inline fast_copy
+
+**Based on**: `FFHT/fast_copy.c` + `FFHT/fast_copy.h`
+
+**Purpose**: Main header file with inline SIMD-optimized memory copy
+
+**What we did**:
+- **Merged**: Combined `FFHT/fast_copy.c` and `FFHT/fast_copy.h` into this single header
+- **Made inline**: All `fast_copy` implementations are now `static inline` functions
+- **Added**: ARM NEON implementation alongside x86 variants (AVX2, SSE2)
+- **Simplified**: Uses `FHT_HEADER_ONLY` macro consistently (always defined in our build)
+- **Fixed**: Added size guards (`if(n < X)`) to handle small buffers correctly
+
+**SIMD variants included**:
+1. AVX-512: 512-bit vectors (64 bytes) - x86_64
+2. AVX2: 256-bit vectors (32 bytes) - x86_64
+3. SSE2: 128-bit vectors (16 bytes) - x86_64
+4. **NEON: 128-bit vectors (16 bytes) - aarch64** [NEW]
+5. Fallback: `memcpy()` - generic
+
+**Comparison command**: `diff FFHT/fast_copy.c fht.h`
+
+**Why this approach**:
+- Eliminates linking issues with separate `fast_copy.c`
+- Ensures `fast_copy` is properly inlined for performance
+- Simpler build process (no separate compilation unit)
+- Works seamlessly with both C tests and Rust FFI
+
+---
+
+### 2. `fht.c` - Simplified Implementation Wrapper
+
+**Based on**: `FFHT/fht_impl.h`
+
+**Purpose**: Minimal wrapper that includes SIMD implementations and defines OOP functions
+
+**Structure**:
+```c
+#include "fht.h"
+
+// Include appropriate SIMD implementation (similar to FFHT/fht_impl.h)
+#ifdef __AVX__
+#include "FFHT/fht_avx.c"
+#elif defined(__aarch64__) || defined(__ARM_NEON)
+#include "fht_neon.c"
+#else
+#include "FFHT/fht_sse.c"
+#endif
+
+// Out-of-place wrappers
+int fht_float_oop(float *in, float *out, int log_n) {
+    fast_copy(out, in, sizeof(float) << log_n);
+    return fht_float(out, log_n);
+}
+// ... fht_double_oop ...
+```
+
+**What we did**:
+- **Adapted from**: `FFHT/fht_impl.h` (which was a header with includes)
+- **Changed to**: A `.c` file instead of `.h` (cleaner for build system)
+- **Removed**: `fast_copy` implementation (moved to `fht.h`)
+- **Simplified**: Direct conditional compilation for SIMD selection
+- **Added**: ARM NEON path in compilation logic
+- **Added**: Out-of-place function implementations
+
+**Comparison command**: `diff FFHT/fht_impl.h fht.c`
+
+---
+
+### 3. `_ffht_3.c` - Python 3.9+ Compatibility Fix
 
 **Purpose**: Python extension module binding for NumPy arrays
 
@@ -203,96 +362,6 @@ This section documents the files that differ from the original FFHT submodule (`
 
 ---
 
-### 2. `fht_impl.h` - Multi-Architecture Implementation Selection
-
-**Purpose**: Header file that selects the appropriate SIMD implementation based on target architecture
-
-**Comparison**: `ffht.rs/fht_impl.h` vs `ffht.rs/FFHT/fht_impl.h`
-
-**Key differences**:
-
-```diff
- #ifdef __AVX__
- #include "fht_avx.c"
- #define VECTOR_WIDTH (32u)
-+#elif defined(__aarch64__) || defined(__ARM_NEON)
-+#include "fht_neon.c"
-+#define VECTOR_WIDTH (16u)
- #else
- #include "fht_sse.c"
- #define VECTOR_WIDTH (16u)
-```
-
-**What changed**:
-- **Added**: ARM NEON detection and inclusion between AVX and SSE fallback
-- **Changed**: Uses `memcpy` instead of `fast_copy` in the `_oop` functions (our version)
-
-**Architecture selection logic**:
-1. `__AVX__` → Use `fht_avx.c` (256-bit vectors, x86_64)
-2. `__aarch64__` or `__ARM_NEON__` → Use `fht_neon.c` (128-bit vectors, ARM) **[NEW]**
-3. Default → Use `fht_sse.c` (128-bit vectors, x86_64)
-
-**Why needed**: The original `FFHT/fht_impl.h` only has AVX and SSE branches, falling back to SSE for all non-AVX platforms. This modified version adds ARM NEON support, enabling efficient execution on aarch64.
-
----
-
-### 3. `fast_copy.c` - SIMD-Optimized Memory Copy with ARM Support
-
-**Purpose**: Fast memory copy using SIMD instructions for power-of-2 sized buffers
-
-**Comparison**: `ffht.rs/fast_copy.c` vs `ffht.rs/FFHT/fast_copy.c`
-
-**Key differences**:
-
-```diff
- #include "fast_copy.h"
- #include <string.h>
- #include <stdlib.h>
- #if (defined(__x86_64__) || defined(__i386__))
- #  include <x86intrin.h>
-+#elif (defined(__aarch64__) || defined(__ARM_NEON))
-+#  include <arm_neon.h>
- #endif
-```
-
-```diff
- #elif __SSE2__
- // SSE2 implementation...
-+#elif (defined(__aarch64__) || defined(__ARM_NEON))
-+// ARM NEON version: uses 128-bit vectors (same as SSE2)
-+_STORAGE_ void *fast_copy(void *out, void *in, size_t n) {
-+    if(n >= FAST_COPY_MEMCPY_THRESHOLD) {
-+        return memcpy(out, in, n);
-+    }
-+    n >>= 4;
-+    for(float32x4_t *ov = (float32x4_t *)out, *iv = (float32x4_t *)in; n--;) {
-+        vst1q_f32((float *)(ov++), vld1q_f32((float *)(iv++)));
-+    }
-+    return out;
-+}
- #else
- _STORAGE_ void *fast_copy(void *out, void *in, size_t n) {
-     return memcpy(out, in, n);
- }
- #endif
-```
-
-**What changed**:
-- **Added**: `<arm_neon.h>` include for ARM NEON intrinsics
-- **Added**: Complete ARM NEON `fast_copy` implementation using `vld1q_f32` and `vst1q_f32`
-- **Added**: ARM/aarch64 architecture detection in the conditional compilation chain
-
-**Implementation hierarchy**:
-1. AVX-512: 512-bit vectors (64 bytes) - x86_64 with AVX-512
-2. AVX2: 256-bit vectors (32 bytes) - x86_64 with AVX2
-3. SSE2: 128-bit vectors (16 bytes) - x86_64 with SSE2
-4. **ARM NEON: 128-bit vectors (16 bytes) - aarch64 with NEON** **[NEW]**
-5. Fallback: `memcpy()` - Generic C
-
-**Why needed**: The original `FFHT/fast_copy.c` has no ARM support, falling back to generic `memcpy()` on ARM platforms. This modified version provides SIMD-accelerated copying on ARM using NEON intrinsics, delivering performance comparable to x86 SSE2.
-
----
-
 ## New Files (Not in Original FFHT)
 
 ### 4. `fht_neon.c` - ARM NEON SIMD Implementation
@@ -310,11 +379,21 @@ This section documents the files that differ from the original FFHT submodule (`
 
 ## Summary Table
 
-| File          | Status       | Purpose                | Key Change                   |
-|---------------|--------------|------------------------|------------------------------|
-| `_ffht_3.c`   | Modified     | Python binding         | Fixed for Python 3.9+        |
-| `fht_impl.h`  | Modified/New | Architecture selection | Added ARM NEON support       |
-| `fast_copy.c` | Modified/New | SIMD memory copy       | Added ARM NEON fast copy     |
-| `fht_neon.c`  | **New**      | ARM FHT implementation | Complete NEON implementation |
+| File          | Status       | Purpose                          | Key Change                                |
+|---------------|--------------|----------------------------------|-------------------------------------------|
+| `fht.h`       | Modified     | Main header + inline fast_copy   | Merged fast_copy, added NEON variant      |
+| `fht.c`       | Modified     | Implementation wrapper           | Simplified, no separate fht_impl.h        |
+| `_ffht_3.c`   | Modified     | Python 3 binding                 | Fixed for Python 3.9+                     |
+| `fht_neon.c`  | **New**      | ARM NEON FHT implementation      | Complete NEON SIMD implementation         |
+| `test_quick.c`| **New**      | Comprehensive C test suite       | Tests all functions (in-place, OOP, etc.) |
+| `test_neon.c` | **New**      | NEON-specific correctness tests  | Benchmarks and validation                 |
+
+**Files NOT needed anymore** (merged or removed):
+- `FFHT/fht_impl.h` - Logic adapted and moved to `fht.c`
+- `FFHT/fht_header_only.h` - Not used; we use `-DFHT_HEADER_ONLY` flag instead
+- `FFHT/fast_copy.c` - Merged into `fht.h` as `static inline` functions
+- `FFHT/fast_copy.h` - Merged into `fht.h`
+
+**Note**: We don't create our own `fht_impl.h`, `fht_header_only.h`, `fast_copy.c`, or `fast_copy.h` files. The original FFHT versions exist in the `FFHT/` submodule, but we use our simplified `fht.{c,h}` structure instead.
 
 These modifications maintain full backward compatibility with x86_64 while adding efficient support for aarch64/ARM platforms.
