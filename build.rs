@@ -9,8 +9,7 @@ fn main() {
     // Common settings
     // Compile fht.c which includes fast_copy.c (single translation unit to avoid linking issues)
     build
-        .file("fht.c")        // Our wrapper that includes fast_copy.c and then fht_impl.h
-	//.file("fast_copy.c")  // Our ARM NEON enhanced fast_copy.c
+        .file("fht.c")
         .include(".")         // Include current directory FIRST
         .include("FFHT")      // Include FFHT headers for fht_sse.c, fht_avx.c, etc.
         .opt_level(3)
@@ -25,7 +24,7 @@ fn main() {
     match target_arch.as_str() {
         "x86_64" => {
             // Use native architecture optimizations
-            // fht.c will automatically include the right SIMD version via fht_impl.h
+            // fht.c will automatically include the right SIMD version
             if target_os != "windows" {
                 build.flag("-march=native");
             }
@@ -35,7 +34,7 @@ fn main() {
         }
         "aarch64" => {
             // ARM64 with NEON
-            // fht.c will automatically include fht_neon.c via fht_impl.h
+            // fht.c will automatically include fht_neon.c
             if target_os == "linux" || target_os == "android" {
                 build.flag("-march=armv8-a+simd");
             } else if target_os == "macos" {
@@ -48,7 +47,7 @@ fn main() {
         }
         _ => {
             // Fallback: portable C implementation
-            // fht.c will include fht_sse.c via fht_impl.h
+            // fht.c will include fht_sse.c
             println!("cargo:warning=Building FFHT without SIMD optimizations for {}", target_arch);
         }
     }
@@ -58,9 +57,6 @@ fn main() {
     // Tell cargo to rerun if any of the C files change
     println!("cargo:rerun-if-changed=FFHT/fht.c");
     println!("cargo:rerun-if-changed=FFHT/fht.h");
-    println!("cargo:rerun-if-changed=fht_impl.h");  // Our modified version with NEON support
-    println!("cargo:rerun-if-changed=fast_copy.c");  // Our ARM NEON enhanced version
-    println!("cargo:rerun-if-changed=fast_copy.h");
     // SIMD implementations (from FFHT submodule and our additions)
     println!("cargo:rerun-if-changed=FFHT/fht_sse.c");
     println!("cargo:rerun-if-changed=FFHT/fht_avx.c");

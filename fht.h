@@ -30,6 +30,9 @@ _STORAGE_ void *fast_copy(void *out, void *in, size_t n) {
     if(n >= FAST_COPY_MEMCPY_THRESHOLD) {
         return memcpy(out, in, n);
     }
+    if(n < 64) {
+        return memcpy(out, in, n);
+    }
     n >>= 6;
     for(__m512 *ov = (__m512 *)out, *iv = (__m512 *)in; n--;) {
         _mm512_storeu_ps((float *)(ov++), _mm512_loadu_ps((float *)(iv++)));
@@ -42,21 +45,22 @@ _STORAGE_ void *fast_copy(void *out, void *in, size_t n) {
     if(n >= FAST_COPY_MEMCPY_THRESHOLD) {
         return memcpy(out, in, n);
     }
-    if (n >= 32) {
-        size_t count = n >> 5;
-        __m256 *ov = (__m256 *)out;
-        __m256 *iv = (__m256 *)in;
-        for(; count--;) {
-            _mm256_storeu_ps((float *)(ov++), _mm256_loadu_ps((float *)(iv++)));
-        }
-        return out;
+    if(n < 32) {
+        return memcpy(out, in, n);
     }
-    return memcpy(out, in, n);
+    n >>= 5;
+    for(__m256 *ov = (__m256 *)out, *iv = (__m256 *)in; n--;) {
+        _mm256_storeu_ps((float *)(ov++), _mm256_loadu_ps((float *)(iv++)));
+    }
+    return out;
 }
 #elif __SSE2__
 // If n is less than 16, defaults to memcpy. Otherwise, being a power of 2, we can just use unaligned stores and loads.
 _STORAGE_ void *fast_copy(void *out, void *in, size_t n) {
     if(n >= FAST_COPY_MEMCPY_THRESHOLD) {
+        return memcpy(out, in, n);
+    }
+    if(n < 16) {
         return memcpy(out, in, n);
     }
     n >>= 4;
@@ -71,16 +75,14 @@ _STORAGE_ void *fast_copy(void *out, void *in, size_t n) {
     if(n >= FAST_COPY_MEMCPY_THRESHOLD) {
         return memcpy(out, in, n);
     }
-    if (n >= 16) {
-        size_t count = n >> 4;
-        float *ov = (float *)out;
-        const float *iv = (const float *)in;
-        for(; count--; ov += 4, iv += 4) {
-            vst1q_f32(ov, vld1q_f32(iv));
-        }
-        return out;
+    if(n < 16) {
+        return memcpy(out, in, n);
     }
-    return memcpy(out, in, n);
+    n >>= 4;
+    for(float *ov = (float *)out, *iv = (float *)in; n--; ov += 4, iv += 4) {
+        vst1q_f32(ov, vld1q_f32(iv));
+    }
+    return out;
 }
 #else
 _STORAGE_ void *fast_copy(void *out, void *in, size_t n) {
