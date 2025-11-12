@@ -4,7 +4,6 @@ VPATH += FFHT
 
 all: install
 
-test: test_float test_double fast_copy.o fht.o
 TARGET += test_quick test_neon
 TARGET += test_float test_double test_float_header_only test_double_header_only
 
@@ -15,24 +14,40 @@ install:
 	ln -s FFHT/fht.c fht.c
 	python setup.py install --user
 
-%.o: %.c
-	$(CC) $< -o $@ -c $(CFLAGS)
-
-test_%: test_%.c $(OBJ)
+test_quick: test_quick.c $(OBJ)
 	$(CC) $< $(OBJ) -o $@ $(CFLAGS) -lm
 
 test_neon: test_neon.c $(OBJ)
 	$(CC) $< $(OBJ) -o $@ $(CFLAGS) -lm
 
+# Regular tests from FFHT (need object files)
+test_double: test_double.c $(OBJ)
+	$(CC) $< $(OBJ) -o $@ $(CFLAGS) -lm
+
+test_float: test_float.c $(OBJ)
+	$(CC) $< $(OBJ) -o $@ $(CFLAGS) -lm
+
+# Header-only tests from FFHT (self-contained, no linking needed)
 test_double_header_only: test_double_header_only.c
 	$(CC) $< -o $@ $(CFLAGS)
 
-test_float_header_only: test_double_header_only.c
+test_float_header_only: test_float_header_only.c
 	$(CC) $< -o $@ $(CFLAGS)
 
+# Build all test executables
+test: $(TARGET)
+	@echo "All tests compiled successfully!"
+	@echo "Run individual tests:"
+	@echo "  ./test_quick        - Quick comprehensive test (ffht.rs)"
+	@echo "  ./test_neon         - NEON-specific test (ffht.rs)"
+	@echo "  ./test_float        - Float FHT test (FFHT)"
+	@echo "  ./test_double       - Double FHT test (FFHT)"
+	@echo "  ./test_float_header_only  - Float header-only test (FFHT)"
+	@echo "  ./test_double_header_only - Double header-only test (FFHT)"
+
 clean:
-	rm -f test_float test_double test_neon test_float_header_only test_double_header_only $(OBJ)
+	rm -f $(OBJ) $(TARGET)
 	rm -f fht.c
 	rm -rf build/ FFHT.egg-info/ dist/
 
-.PHONY: all test clean
+.PHONY: all test clean install
