@@ -14,16 +14,12 @@ install: create-link
 	git submodule update --init
 	python setup.py install --user
 
-test_quick: test_quick.c fht.c
+# Pattern rule for test files in current directory (test_quick, test_neon)
+test_quick test_neon: %: %.c fht.c
 	$(CC) $^ -o $@ $(CFLAGS) -lm
 
-test_neon: test_neon.c fht.c
-	$(CC) $^ -o $@ $(CFLAGS) -lm
-
-test_double: FFHT/test_double.c fht.c
-	$(CC) $^ -o $@ $(CFLAGS) -lm
-
-test_float: FFHT/test_float.c fht.c
+# Pattern rule for test files from FFHT directory (test_float, test_double)
+test_float test_double: test_%: FFHT/test_%.c fht.c
 	$(CC) $^ -o $@ $(CFLAGS) -lm
 
 # Build all test executables
@@ -36,7 +32,7 @@ test: create-link $(TARGET)
 	@echo "  ./test_double       - Double FHT test (FFHT)"
 
 clean:
-	rm -f $(OBJ) $(TARGET) fht.o
+	rm -f $(OBJ) $(TARGET)
 	rm -f fht_avx.c fht_sse.c
 	rm -rf build/ FFHT.egg-info/ dist/
 
