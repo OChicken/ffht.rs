@@ -8,15 +8,14 @@ fn main() {
 
     // Common settings
     build
-        .file("fht.c")
-        // Note: Not compiling fast_copy.c separately - it's included by fht_impl.h
-        // We'll define USE_MEMCPY to use memcpy instead of SIMD for now
-        .include(".")
+        .file("FFHT/fht.c")  // Use fht.c from FFHT submodule
+        .file("fast_copy.c")  // Our ARM NEON enhanced fast_copy.c
+        .include("FFHT")      // Include FFHT headers
+        .include(".")         // Include our headers (fht_impl.h with NEON support)
         .opt_level(3)
         .flag("-std=c99")
         .flag("-Wall")
-        .flag("-Wextra")
-        .define("USE_MEMCPY_FOR_FAST_COPY", None);
+        .flag("-Wextra");
 
     // Detect target architecture and add appropriate SIMD implementation
     let target_arch = env::var("CARGO_CFG_TARGET_ARCH").unwrap();
@@ -56,13 +55,13 @@ fn main() {
     build.compile("ffht");
 
     // Tell cargo to rerun if any of the C files change
-    println!("cargo:rerun-if-changed=fht.c");
-    println!("cargo:rerun-if-changed=fht.h");
-    println!("cargo:rerun-if-changed=fht_impl.h");
-    println!("cargo:rerun-if-changed=fast_copy.c");
+    println!("cargo:rerun-if-changed=FFHT/fht.c");
+    println!("cargo:rerun-if-changed=FFHT/fht.h");
+    println!("cargo:rerun-if-changed=fht_impl.h");  // Our modified version with NEON support
+    println!("cargo:rerun-if-changed=fast_copy.c");  // Our ARM NEON enhanced version
     println!("cargo:rerun-if-changed=fast_copy.h");
-    // SIMD implementations are included by fht_impl.h
-    println!("cargo:rerun-if-changed=fht_sse.c");
-    println!("cargo:rerun-if-changed=fht_avx.c");
-    println!("cargo:rerun-if-changed=fht_neon.c");
+    // SIMD implementations (from FFHT submodule and our additions)
+    println!("cargo:rerun-if-changed=FFHT/fht_sse.c");
+    println!("cargo:rerun-if-changed=FFHT/fht_avx.c");
+    println!("cargo:rerun-if-changed=fht_neon.c");  // Our new ARM NEON implementation
 }
