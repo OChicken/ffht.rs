@@ -49,7 +49,7 @@ module = Extension('ffht',
                                        '-Wshadow', '-Wpointer-arith', '-Wcast-qual',
                                        '-Wstrict-prototypes', '-Wmissing-prototypes',
                                        '-std=c99', '-DFHT_HEADER_ONLY'],
-                   include_dirs=[np.get_include(), "FFHT"])  # Added FFHT to include path
+                   include_dirs=[np.get_include(), "FFHT"])
 
 setup(name='FFHT',
       version='1.1',
