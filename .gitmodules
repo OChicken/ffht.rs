@@ -1,0 +1,3 @@
+[submodule "FFHT"]
+	path = FFHT
+	url = https://github.com/FALCONN-LIB/FFHT.git
