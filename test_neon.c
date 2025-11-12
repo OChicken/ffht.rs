@@ -8,7 +8,7 @@
 #define MAX_LOG_N 10
 
 /* Reference naive FHT for verification */
-void fht_naive_float(float *buf, int n) {
+static void fht_naive_float(float *buf, int n) {
     if (n == 1) return;
 
     int half = n / 2;
@@ -33,7 +33,7 @@ void fht_naive_float(float *buf, int n) {
     free(tmp);
 }
 
-int test_correctness(int log_n) {
+static int test_correctness(int log_n) {
     int n = 1 << log_n;
     float *buf1 = (float *)malloc(n * sizeof(float));
     float *buf2 = (float *)malloc(n * sizeof(float));
@@ -65,7 +65,7 @@ int test_correctness(int log_n) {
     return passed;
 }
 
-void benchmark(int log_n, int iterations) {
+static void benchmark(int log_n, int iterations) {
     int n = 1 << log_n;
     float *buf = (float *)malloc(n * sizeof(float));
 
@@ -93,6 +93,8 @@ void benchmark(int log_n, int iterations) {
 }
 
 int main(int argc, char **argv) {
+    (void)argc;  /* Unused */
+    (void)argv;  /* Unused */
     printf("ARM NEON FHT Implementation Test\n");
     printf("=================================\n\n");
 

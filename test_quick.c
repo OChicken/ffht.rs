@@ -1,7 +1,7 @@
 #include "fht.h"
 #include <stdio.h>
 
-static int test_defines() {
+static int test_defines(void) {
     printf("%s\n", __func__);
 
     #ifdef __AVX__
@@ -26,7 +26,7 @@ static int test_defines() {
     return 0;
 }
 
-static int test_fast_copy() {
+static int test_fast_copy(void) {
     printf("\n%s\n", __func__);
 
     float input[4] = {1.0, 2.0, 3.0, 4.0};
@@ -42,7 +42,7 @@ static int test_fast_copy() {
     return 0;
 }
 
-static int test_inplace() {
+static int test_inplace(void) {
     printf("\n%s\n", __func__);
 
     float data[4] = {1.0, -1.0, 1.0, -1.0};
@@ -57,7 +57,7 @@ static int test_inplace() {
     return 0;
 }
 
-static int test_oop() {
+static int test_oop(void) {
     printf("\n%s\n", __func__);
 
     float input[4] = {1.0, -1.0, 1.0, -1.0};
@@ -74,9 +74,10 @@ static int test_oop() {
     return 0;
 }
 
-int main() {
+int main(void) {
     test_defines();
     test_fast_copy();
     test_inplace();
     test_oop();
+    return 0;
 }
