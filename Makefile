@@ -1,6 +1,5 @@
 CC = gcc
-CFLAGS = -O3 -march=native -std=c99 -pedantic -Wall -Wextra -Wshadow -Wpointer-arith -Wcast-qual -Wstrict-prototypes -Wmissing-prototypes -IFFHT
-VPATH += FFHT
+CFLAGS = -O3 -march=native -std=c99 -pedantic -Wall -Wextra -Wshadow -Wpointer-arith -Wcast-qual -Wstrict-prototypes -Wmissing-prototypes
 
 all: install
 
@@ -11,8 +10,11 @@ OBJ := fast_copy.o fht.o
 
 install:
 	git submodule update --init
-	ln -s FFHT/fht.c fht.c
+	ln -sf FFHT/fht.c fht.c
 	python setup.py install --user
+
+# %: %.c $(OBJ)
+# 	$(CC) $< $(OBJ) -o $@ $(CFLAGS) -lm
 
 test_quick: test_quick.c $(OBJ)
 	$(CC) $< $(OBJ) -o $@ $(CFLAGS) -lm
@@ -20,22 +22,42 @@ test_quick: test_quick.c $(OBJ)
 test_neon: test_neon.c $(OBJ)
 	$(CC) $< $(OBJ) -o $@ $(CFLAGS) -lm
 
-# Regular tests from FFHT (need object files)
-test_double: test_double.c $(OBJ)
-	$(CC) $< $(OBJ) -o $@ $(CFLAGS) -lm
+test_double: FFHT/test_double.c $(OBJ)
+	ln -sf $< $@.c
+	$(CC) $@.c $(OBJ) -o $@ $(CFLAGS) -lm
+	rm $@.c
 
-test_float: test_float.c $(OBJ)
-	$(CC) $< $(OBJ) -o $@ $(CFLAGS) -lm
+test_float: FFHT/test_float.c $(OBJ)
+	ln -sf $< $@.c
+	$(CC) $@.c $(OBJ) -o $@ $(CFLAGS) -lm
+	rm $@.c
 
 # Header-only tests from FFHT (self-contained, no linking needed)
-test_double_header_only: test_double_header_only.c
-	$(CC) $< -o $@ $(CFLAGS)
+test_double_header_only: FFHT/test_double_header_only.c
+	ln -sf $< $@.c
+	$(CC) $@.c -o $@ $(CFLAGS)
+	rm $@.c
 
-test_float_header_only: test_float_header_only.c
-	$(CC) $< -o $@ $(CFLAGS)
+test_float_header_only: FFHT/test_float_header_only.c
+	ln -sf $< $@.c
+	$(CC) $@.c -o $@ $(CFLAGS)
+	rm $@.c
+
+test-init:
+	ln -sf FFHT/fht.c fht.c
+	ln -sf FFHT/fht.h fht.h
+	ln -sf FFHT/fast_copy.h fast_copy.h
+	ln -sf FFHT/fht_avx.c fht_avx.c
+	ln -sf FFHT/fht_sse.c fht_sse.c
+	ln -sf FFHT/test_float.c test_float.c
+	ln -sf FFHT/test_float_header_only.c test_float_header_only.c
+	ln -sf FFHT/test_double.c test_double.c
+	ln -sf FFHT/test_double_header_only.c test_double_header_only.c
+	$(CC) -c fast_copy.c -o fast_copy.o $(CFLAGS) -lm
+	$(CC) -c fht.c       -o fht.o       $(CFLAGS) -lm
 
 # Build all test executables
-test: $(TARGET)
+test: test-init $(TARGET)
 	@echo "All tests compiled successfully!"
 	@echo "Run individual tests:"
 	@echo "  ./test_quick        - Quick comprehensive test (ffht.rs)"
@@ -47,7 +69,7 @@ test: $(TARGET)
 
 clean:
 	rm -f $(OBJ) $(TARGET)
-	rm -f fht.c
+	rm -f fht.c fht.h 
 	rm -rf build/ FFHT.egg-info/ dist/
 
 .PHONY: all test clean install
