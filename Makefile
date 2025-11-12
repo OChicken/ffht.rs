@@ -1,9 +1,12 @@
 CC = gcc
-CFLAGS = -O3 -march=native -std=c99 -pedantic -Wall -Wextra -Wshadow -Wpointer-arith -Wcast-qual -Wstrict-prototypes -Wmissing-prototypes
+CFLAGS = -O3 -march=native -std=c99 -pedantic -Wall -Wextra -Wshadow -Wpointer-arith -Wcast-qual -Wstrict-prototypes -Wmissing-prototypes -IFFHT
+VPATH += FFHT
 
 all: install
 
 test: test_float test_double fast_copy.o fht.o
+TARGET += test_quick test_neon
+TARGET += test_float test_double test_float_header_only test_double_header_only
 
 OBJ := fast_copy.o fht.o
 
@@ -30,6 +33,6 @@ test_float_header_only: test_double_header_only.c
 clean:
 	rm -f test_float test_double test_neon test_float_header_only test_double_header_only $(OBJ)
 	rm -f fht.c
-	rm -rf build/ FFHT.egg-info/
+	rm -rf build/ FFHT.egg-info/ dist/
 
 .PHONY: all test clean
