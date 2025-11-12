@@ -7,11 +7,12 @@ fn main() {
     let mut build = cc::Build::new();
 
     // Common settings
+    // Compile fht.c which includes fast_copy.c (single translation unit to avoid linking issues)
     build
-        .file("FFHT/fht.c")  // Use fht.c from FFHT submodule
-        .file("fast_copy.c")  // Our ARM NEON enhanced fast_copy.c
-        .include("FFHT")      // Include FFHT headers
-        .include(".")         // Include our headers (fht_impl.h with NEON support)
+        .file("fht.c")        // Our wrapper that includes fast_copy.c and then fht_impl.h
+	//.file("fast_copy.c")  // Our ARM NEON enhanced fast_copy.c
+        .include(".")         // Include current directory FIRST
+        .include("FFHT")      // Include FFHT headers for fht_sse.c, fht_avx.c, etc.
         .opt_level(3)
         .flag("-std=c99")
         .flag("-Wall")
