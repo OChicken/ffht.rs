@@ -12,7 +12,7 @@ create-link:
 
 install: create-link
 	git submodule update --init
-	python setup.py install --user
+	python setup.py build_ext --inplace
 
 # Pattern rule for test files in current directory (test_quick, test_neon)
 test_quick test_neon: %: %.c fht.c
