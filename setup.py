@@ -19,6 +19,7 @@ Modified by: OChicken
 Repository: Part of ffht.rs wrapper project
 """
 
+import os
 import sys
 
 try:
@@ -29,9 +30,30 @@ except(IOError, ImportError):
 
 try:
     from setuptools import setup, find_packages, Extension
+    from setuptools.command.build_ext import build_ext
 except ImportError:
     sys.stderr.write('Setuptools not found!\n')
     raise
+
+
+class build_ext_plain_suffix(build_ext):
+    """Emit `ffht.so` instead of `ffht.cpython-314-x86_64-linux-gnu.so`.
+
+    Setuptools appends the interpreter ABI tag (sysconfig's EXT_SUFFIX) so that
+    builds for different Python versions can coexist in one directory.  We drop
+    it because this .so is symlinked into several sibling projects and a stable
+    name keeps those links from breaking on every Python upgrade.
+
+    CPython still imports a bare `.so`: it is the last entry of
+    importlib.machinery.EXTENSION_SUFFIXES.
+
+    Trade-off: without the tag nothing stops a .so built for one Python from
+    being loaded by another.  That does not fail cleanly -- it usually imports
+    and then segfaults.  Rebuild after any Python upgrade.
+    """
+
+    def get_ext_filename(self, ext_name):
+        return ext_name.replace('.', os.sep) + '.so'
 
 try:
     import numpy as np
@@ -63,4 +85,5 @@ setup(name='FFHT',
       keywords='fast Fourier Hadamard transform butterfly SIMD SSE AVX NEON x86_64 aarch64 ARM',
       packages=find_packages(),
       include_package_data=True,
-      ext_modules=[module])
+      ext_modules=[module],
+      cmdclass={'build_ext': build_ext_plain_suffix})
